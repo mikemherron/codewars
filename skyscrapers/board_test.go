@@ -13,6 +13,27 @@ func TestNewBoardFrom(t *testing.T) {
 	AssertBoardState(t, b, startingState)
 }
 
+func TestBoard_Bitset(t *testing.T) {
+	bs := NewBitSet()
+	Assert(t, bs.has(23), "should be set on by defult")
+	Assert(t, bs.has(242), "should be set on by defult")
+	bs.clear(23)
+	Assert(t, !bs.has(23), "should be off")
+	bs.set(23)
+	Assert(t, bs.has(23), "should be on")
+	bs.clear(10)
+	Assert(t, !bs.has(10), "should be off")
+	Assert(t, bs.has(10+64), "should be on")
+	Assert(t, bs.has(10+64+64), "should be on")
+	Assert(t, bs.has(10+64+64+64), "should be on")
+}
+
+func Assert(t *testing.T, v bool, m string) {
+	if !v {
+		t.Errorf(m)
+	}
+}
+
 func TestBoard_Includes(t *testing.T) {
 
 	startingState := [][][]int{
@@ -36,7 +57,7 @@ func TestBoard_Set(t *testing.T) {
 	}
 
 	b := NewBoardFrom(2, startingState)
-	err := b.Set(Cell{0, 0}, 1)
+	err := b.Set(cell(0, 0), 1)
 	if err != nil {
 		t.Fatalf("unable to set %v", err)
 	}
@@ -64,7 +85,7 @@ func TestBoard_cellIndex(t *testing.T) {
 	b := NewBoardFrom(2, startingState)
 
 	for c, expected := range cases {
-		actual := b.cellIndex(c)
+		actual := b.cellIndex(&c)
 		if actual != expected {
 			t.Errorf("Expected %d for %v, got %d", expected, c, actual)
 		}
@@ -74,7 +95,7 @@ func TestBoard_cellIndex(t *testing.T) {
 
 func AssertIncludes(t *testing.T, b Board, r, c int, v []int) {
 	for _, expected := range v {
-		cell := Cell{r, c}
+		cell := cell(r, c)
 		if !b.Includes(cell, expected) {
 			t.Errorf("%v should contain %v", cell, v)
 		}
@@ -85,7 +106,7 @@ func AssertBoardState(t *testing.T, b Board, expected [][][]int) {
 	hasFailed := false
 	for r := 0; r < b.size; r++ {
 		for c := 0; c < b.size; c++ {
-			cell := Cell{r, c}
+			cell := cell(r, c)
 			for _, cellValue := range expected[r][c] {
 				if !b.Includes(cell, cellValue) {
 					hasFailed = true

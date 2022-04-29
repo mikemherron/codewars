@@ -2,7 +2,11 @@ package kata
 
 import (
 	"errors"
+	"flag"
 	"fmt"
+	"log"
+	"os"
+	"runtime/pprof"
 )
 
 func SolvePuzzle(clues []int) [][]int {
@@ -241,9 +245,22 @@ func SolvePuzzle7x7(clues []int, starting [][][]int) [][]int {
 
 type Deducer func(clue int, cells []*Cell, b *Board)
 
-type Solver func(clueMap []*CellRange, clues []int, b *Board) *Board
+var profile = flag.String("profile", "", "")
 
 func solve(b *Board, clueMap []*CellRange, deduce Deducer, clueValues []int) [][]int {
+	flag.Parse()
+	if *profile != "" {
+		f, err := os.Create(*profile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = pprof.StartCPUProfile(f)
+		if err != nil {
+			panic(err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
 	clues := make([]*Clue, 0)
 	for i, clueValue := range clueValues {
 		if clueValue == 0 {
@@ -251,8 +268,10 @@ func solve(b *Board, clueMap []*CellRange, deduce Deducer, clueValues []int) [][
 		}
 
 		cells := b.GetCells(clueMap[i])
-		deduce(clueValue, cells, b)
 		clues = append(clues, &Clue{clueValue, cells, make([][]int, 0)})
+
+		//Apply the initial deductions to the board state
+		deduce(clueValue, cells, b)
 	}
 
 	sol := findSolutionStack(b, clues)
@@ -265,67 +284,66 @@ func solve(b *Board, clueMap []*CellRange, deduce Deducer, clueValues []int) [][
 
 func findSolutionStack(b *Board, clues []*Clue) *Board {
 
-	visible := 0
-	maxHeight := 0
+	visible, maxHeight := 0, 0
+	nextClue := clues[0]
 
-	clue := clues[0]
+	//For each of the cells that are part of this clue
+	for _, c := range nextClue.cells {
 
-	//fmt.Printf("Checking clue %v, %d left\n", clue, len(clues))
+		//Get the number of possible clues for this cell
+		numberPossible, height := b.NumPossibles(c)
 
-	for _, cell := range clue.cells {
-
-		//fmt.Printf("-Checking cell %v\n", cell)
-		numberPossible, height := b.NumPossibles(cell)
+		//Is there more than one possibility?
 		if numberPossible > 1 {
 
-			var s *Board
-			b.PossiblesCb(cell, func(v int) {
-				if s != nil {
-					return
+			//Iterate through each possibility, set that as the value
+			//and then recurse to resolve the remaining cells for this
+			//clue
+			for _, v := range b.Possibles(c) {
+
+				if v > maxHeight && visible+1 > nextClue.visible {
+					continue
 				}
+
+				//IDea: Store an index for each r/c that says if the
+				//specific number has been set in there already. Before
+				//doing the set,
+
 				boardCopy := b.Copy()
-				err := boardCopy.Set(cell, v)
+				err := boardCopy.Set(c, v)
 				if err != nil {
-					return
+					continue
 				}
 
-				//TODO: Copy clues so don't need to traverse again
-				//in recurions
-				solution := findSolutionStack(&boardCopy, clues)
+				solution := findSolutionStack(boardCopy, clues)
 				if solution != nil {
-					s = solution
+					return solution
 				}
-			})
-
-			//We've filled in all possible values for this clue
-			//returna solution if we have it or nil if not
-			return s
-		} else {
-			//fmt.Printf("-cell resolved %v\n", height)
-			if height > maxHeight {
-				visible++
-				maxHeight = height
 			}
+
+			//We've filled in all possible values for this nextClue
+			return nil
 		}
+
+		if height > maxHeight {
+			visible++
+			maxHeight = height
+		}
+
 	}
 
-	//If we get here, all numbers have been filled in for this clue
-	if clue.visible == visible {
-		//this clue has been satisfied
+	if nextClue.visible == visible {
+		//this nextClue has been satisfied
 		if len(clues) == 1 {
-			//this was the last clue, this is our solution
+			//this was the last nextClue, this is our solution
 			return b
 		}
 		return findSolutionStack(b, clues[1:])
-
-	} else {
-		//fmt.Printf("Clue falied got %d expected %d for %v", visible, clue.visible, b)
-
-		//if we are here - the solution doesn't match the clue
-		//return nil
-		return nil
 	}
 
+	//The final solution for this clue does not match the value the clue
+	//expects, so return nil
+	return nil
 }
 
 type Cell struct {
@@ -465,15 +483,11 @@ func (b Board) Remove(c *Cell, v int) error {
 	}
 
 	if possibles == 1 {
-		//fmt.Printf("%v can now only be %d\n", c, firstPos)
 		err := b.Set(c, firstPos)
 		if err != nil {
 			return errUnsolvableCell
 		}
 	}
-
-	//TODO: Check are there any values for which in this Row or column
-	//there is now only a single candidate Cell?
 
 	return nil
 }
@@ -493,7 +507,6 @@ func (b Board) Set(c *Cell, v int) error {
 	for row := 0; row < b.size; row++ {
 		target := cell(row, c.Col)
 		if target != c && b.Includes(target, v) {
-			//fmt.Printf("Removing %v from %d\n", v, target)
 			err := b.Remove(target, v)
 			if err != nil {
 				return errUnsolvableCell
@@ -505,7 +518,6 @@ func (b Board) Set(c *Cell, v int) error {
 	for col := 0; col < b.size; col++ {
 		target := cell(c.Row, col)
 		if target != c && b.Includes(target, v) {
-			//fmt.Printf("Removing %v from %d\n", v, target)
 			err := b.Remove(target, v)
 			if err != nil {
 				return errUnsolvableCell
@@ -516,10 +528,10 @@ func (b Board) Set(c *Cell, v int) error {
 	return nil
 }
 
-func (b Board) Copy() Board {
+func (b Board) Copy() *Board {
 	bitsCopy := append(b.bits[:0:0], b.bits...)
 	bCopy := Board{bits: bitsCopy, size: b.size}
-	return bCopy
+	return &bCopy
 }
 
 func (b Board) Collapse() [][]int {
@@ -748,10 +760,10 @@ func findSolutionClues(b *Board, clues []*Clue) *Board {
 
 		if appliedClean {
 			if len(clues) == 1 {
-				return &bCopy
+				return bCopy
 			}
 
-			sol := findSolutionClues(&bCopy, clues[1:])
+			sol := findSolutionClues(bCopy, clues[1:])
 			if sol != nil {
 				return sol
 			}

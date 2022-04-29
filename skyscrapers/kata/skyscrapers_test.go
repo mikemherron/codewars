@@ -84,16 +84,7 @@ func TestSolvePuzzle(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		actual := c.solve(c.clues, c.starting)
-		for rIndex, row := range c.expected {
-			for cIndex := range row {
-				if len(actual) < rIndex+1 || len(actual[rIndex]) < cIndex+1 {
-					t.Errorf("No value at %d, %d", rIndex, cIndex)
-				} else if actual[rIndex][cIndex] != c.expected[rIndex][cIndex] {
-					t.Errorf("Expected %d at [%d,%d], got %d", c.expected[rIndex][cIndex], rIndex, cIndex, actual[rIndex][cIndex])
-				}
-			}
-		}
+		AssertFinalSolution(t, c.expected, c.solve(c.clues, c.starting))
 	}
 }
 
@@ -192,5 +183,17 @@ func AssertBoardState(t *testing.T, b *Board, expected [][][]int) {
 
 	if hasFailed {
 		t.Errorf("Board state: %v", b)
+	}
+}
+
+func AssertFinalSolution(t *testing.T, expected [][]int, actual [][]int) {
+	for rIndex, row := range expected {
+		for cIndex := range row {
+			if len(actual) < rIndex+1 || len(actual[rIndex]) < cIndex+1 {
+				t.Errorf("No value at %d, %d", rIndex, cIndex)
+			} else if actual[rIndex][cIndex] != expected[rIndex][cIndex] {
+				t.Errorf("Expected %d at [%d,%d], got %d", expected[rIndex][cIndex], rIndex, cIndex, actual[rIndex][cIndex])
+			}
+		}
 	}
 }

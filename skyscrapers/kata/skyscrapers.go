@@ -2,11 +2,8 @@ package kata
 
 import (
 	"errors"
-	"flag"
 	"fmt"
-	"log"
-	"os"
-	"runtime/pprof"
+	"sort"
 )
 
 func SolvePuzzle(clues []int) [][]int {
@@ -39,20 +36,20 @@ func SolvePuzzle4x4(clues []int, starting [][][]int) [][]int {
 			{cell(1, 0), Right},
 			{cell(0, 0), Right},
 		},
-		func(clue int, cells []*Cell, b *Board) {
-			if clue == 1 {
-				_ = b.Set(cells[0], 4)
-			} else if clue == 2 {
-				_ = b.Remove(cells[0], 4)
-			} else if clue == 3 {
-				_ = b.Remove(cells[0], 4)
-				_ = b.Remove(cells[0], 3)
-				_ = b.Remove(cells[1], 4)
-			} else if clue == 4 {
-				_ = b.Set(cells[0], 1)
-				_ = b.Set(cells[1], 2)
-				_ = b.Set(cells[2], 3)
-				_ = b.Set(cells[3], 4)
+		func(clue *Clue, b *Board) {
+			if clue.visible == 1 {
+				_ = b.Set(clue.cells[0], 4)
+			} else if clue.visible == 2 {
+				_ = b.Remove(clue.cells[0], 4)
+			} else if clue.visible == 3 {
+				_ = b.Remove(clue.cells[0], 4)
+				_ = b.Remove(clue.cells[0], 3)
+				_ = b.Remove(clue.cells[1], 4)
+			} else if clue.visible == 4 {
+				_ = b.Set(clue.cells[0], 1)
+				_ = b.Set(clue.cells[1], 2)
+				_ = b.Set(clue.cells[2], 3)
+				_ = b.Set(clue.cells[3], 4)
 			}
 		},
 		clues,
@@ -91,47 +88,47 @@ func SolvePuzzle6x6(clues []int, starting [][][]int) [][]int {
 			{cell(1, 0), Right},
 			{cell(0, 0), Right},
 		},
-		func(clue int, cells []*Cell, b *Board) {
-			if clue == 1 {
-				_ = b.Set(cells[0], 6)
-			} else if clue == 2 {
-				_ = b.Remove(cells[0], 6)
-			} else if clue == 3 {
-				_ = b.Remove(cells[0], 6)
-				_ = b.Remove(cells[1], 6)
+		func(clue *Clue, b *Board) {
+			if clue.visible == 1 {
+				_ = b.Set(clue.cells[0], 6)
+			} else if clue.visible == 2 {
+				_ = b.Remove(clue.cells[0], 6)
+			} else if clue.visible == 3 {
+				_ = b.Remove(clue.cells[0], 6)
+				_ = b.Remove(clue.cells[1], 6)
 
-				_ = b.Remove(cells[0], 5)
-			} else if clue == 4 {
-				_ = b.Remove(cells[0], 6)
-				_ = b.Remove(cells[1], 6)
-				_ = b.Remove(cells[2], 6)
+				_ = b.Remove(clue.cells[0], 5)
+			} else if clue.visible == 4 {
+				_ = b.Remove(clue.cells[0], 6)
+				_ = b.Remove(clue.cells[1], 6)
+				_ = b.Remove(clue.cells[2], 6)
 
-				_ = b.Remove(cells[0], 5)
-				_ = b.Remove(cells[1], 5)
+				_ = b.Remove(clue.cells[0], 5)
+				_ = b.Remove(clue.cells[1], 5)
 
-				_ = b.Remove(cells[0], 4)
-			} else if clue == 5 {
-				_ = b.Remove(cells[0], 6)
-				_ = b.Remove(cells[1], 6)
-				_ = b.Remove(cells[2], 6)
-				_ = b.Remove(cells[3], 6)
+				_ = b.Remove(clue.cells[0], 4)
+			} else if clue.visible == 5 {
+				_ = b.Remove(clue.cells[0], 6)
+				_ = b.Remove(clue.cells[1], 6)
+				_ = b.Remove(clue.cells[2], 6)
+				_ = b.Remove(clue.cells[3], 6)
 
-				_ = b.Remove(cells[0], 5)
-				_ = b.Remove(cells[1], 5)
-				_ = b.Remove(cells[2], 5)
+				_ = b.Remove(clue.cells[0], 5)
+				_ = b.Remove(clue.cells[1], 5)
+				_ = b.Remove(clue.cells[2], 5)
 
-				_ = b.Remove(cells[0], 4)
-				_ = b.Remove(cells[1], 4)
+				_ = b.Remove(clue.cells[0], 4)
+				_ = b.Remove(clue.cells[1], 4)
 
-				_ = b.Remove(cells[0], 3)
+				_ = b.Remove(clue.cells[0], 3)
 
-			} else if clue == 6 {
-				_ = b.Set(cells[0], 1)
-				_ = b.Set(cells[1], 2)
-				_ = b.Set(cells[2], 3)
-				_ = b.Set(cells[3], 4)
-				_ = b.Set(cells[4], 5)
-				_ = b.Set(cells[5], 6)
+			} else if clue.visible == 6 {
+				_ = b.Set(clue.cells[0], 1)
+				_ = b.Set(clue.cells[1], 2)
+				_ = b.Set(clue.cells[2], 3)
+				_ = b.Set(clue.cells[3], 4)
+				_ = b.Set(clue.cells[4], 5)
+				_ = b.Set(clue.cells[5], 6)
 			}
 		},
 		clues,
@@ -174,140 +171,118 @@ func SolvePuzzle7x7(clues []int, starting [][][]int) [][]int {
 			{cell(1, 0), Right},
 			{cell(0, 0), Right},
 		},
-		func(clue int, cells []*Cell, b *Board) {
-			if clue == 1 {
-				_ = b.Set(cells[0], 7)
-			} else if clue == 2 {
-				_ = b.Remove(cells[0], 7)
-			} else if clue == 3 {
-				_ = b.Remove(cells[0], 7)
-				_ = b.Remove(cells[1], 7)
+		func(clue *Clue, b *Board) {
+			if clue.visible == 1 {
+				_ = b.Set(clue.cells[0], 7)
+			} else if clue.visible == 2 {
+				_ = b.Remove(clue.cells[0], 7)
+			} else if clue.visible == 3 {
+				_ = b.Remove(clue.cells[0], 7)
+				_ = b.Remove(clue.cells[1], 7)
 
-				_ = b.Remove(cells[0], 6)
-			} else if clue == 4 {
-				_ = b.Remove(cells[0], 7)
-				_ = b.Remove(cells[1], 7)
-				_ = b.Remove(cells[2], 7)
+				_ = b.Remove(clue.cells[0], 6)
+			} else if clue.visible == 4 {
+				_ = b.Remove(clue.cells[0], 7)
+				_ = b.Remove(clue.cells[1], 7)
+				_ = b.Remove(clue.cells[2], 7)
 
-				_ = b.Remove(cells[0], 6)
-				_ = b.Remove(cells[1], 6)
+				_ = b.Remove(clue.cells[0], 6)
+				_ = b.Remove(clue.cells[1], 6)
 
-				_ = b.Remove(cells[0], 5)
-			} else if clue == 5 {
-				_ = b.Remove(cells[0], 7)
-				_ = b.Remove(cells[1], 7)
-				_ = b.Remove(cells[2], 7)
-				_ = b.Remove(cells[3], 7)
+				_ = b.Remove(clue.cells[0], 5)
+			} else if clue.visible == 5 {
+				_ = b.Remove(clue.cells[0], 7)
+				_ = b.Remove(clue.cells[1], 7)
+				_ = b.Remove(clue.cells[2], 7)
+				_ = b.Remove(clue.cells[3], 7)
 
-				_ = b.Remove(cells[0], 6)
-				_ = b.Remove(cells[1], 6)
-				_ = b.Remove(cells[2], 6)
+				_ = b.Remove(clue.cells[0], 6)
+				_ = b.Remove(clue.cells[1], 6)
+				_ = b.Remove(clue.cells[2], 6)
 
-				_ = b.Remove(cells[0], 5)
-				_ = b.Remove(cells[1], 5)
+				_ = b.Remove(clue.cells[0], 5)
+				_ = b.Remove(clue.cells[1], 5)
 
-				_ = b.Remove(cells[0], 4)
+				_ = b.Remove(clue.cells[0], 4)
 
-			} else if clue == 6 {
-				_ = b.Remove(cells[0], 7)
-				_ = b.Remove(cells[1], 7)
-				_ = b.Remove(cells[2], 7)
-				_ = b.Remove(cells[3], 7)
-				_ = b.Remove(cells[4], 7)
+			} else if clue.visible == 6 {
+				_ = b.Remove(clue.cells[0], 7)
+				_ = b.Remove(clue.cells[1], 7)
+				_ = b.Remove(clue.cells[2], 7)
+				_ = b.Remove(clue.cells[3], 7)
+				_ = b.Remove(clue.cells[4], 7)
 
-				_ = b.Remove(cells[0], 6)
-				_ = b.Remove(cells[1], 6)
-				_ = b.Remove(cells[2], 6)
-				_ = b.Remove(cells[3], 6)
+				_ = b.Remove(clue.cells[0], 6)
+				_ = b.Remove(clue.cells[1], 6)
+				_ = b.Remove(clue.cells[2], 6)
+				_ = b.Remove(clue.cells[3], 6)
 
-				_ = b.Remove(cells[0], 5)
-				_ = b.Remove(cells[1], 5)
-				_ = b.Remove(cells[2], 5)
+				_ = b.Remove(clue.cells[0], 5)
+				_ = b.Remove(clue.cells[1], 5)
+				_ = b.Remove(clue.cells[2], 5)
 
-				_ = b.Remove(cells[0], 4)
-				_ = b.Remove(cells[1], 4)
+				_ = b.Remove(clue.cells[0], 4)
+				_ = b.Remove(clue.cells[1], 4)
 
-				_ = b.Remove(cells[0], 3)
+				_ = b.Remove(clue.cells[0], 3)
 
-			} else if clue == 7 {
-				_ = b.Set(cells[0], 1)
-				_ = b.Set(cells[1], 2)
-				_ = b.Set(cells[2], 3)
-				_ = b.Set(cells[3], 4)
-				_ = b.Set(cells[4], 5)
-				_ = b.Set(cells[5], 6)
-				_ = b.Set(cells[6], 7)
+			} else if clue.visible == 7 {
+				_ = b.Set(clue.cells[0], 1)
+				_ = b.Set(clue.cells[1], 2)
+				_ = b.Set(clue.cells[2], 3)
+				_ = b.Set(clue.cells[3], 4)
+				_ = b.Set(clue.cells[4], 5)
+				_ = b.Set(clue.cells[5], 6)
+				_ = b.Set(clue.cells[6], 7)
 			}
 		},
 		clues,
 	)
 }
 
-type Deducer func(clue int, cells []*Cell, b *Board)
-
-var profile = flag.String("profile", "", "")
-
 func solve(b *Board, clueMap []*CellRange, deduce Deducer, clueValues []int) [][]int {
-	flag.Parse()
-	if *profile != "" {
-		f, err := os.Create(*profile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = pprof.StartCPUProfile(f)
-		if err != nil {
-			panic(err)
-		}
-		defer pprof.StopCPUProfile()
+
+	clues := NewClues(clueValues, clueMap, b)
+	for _, clue := range clues {
+		deduce(clue, b)
 	}
 
-	clues := make([]*Clue, 0)
-	for i, clueValue := range clueValues {
-		if clueValue == 0 {
-			continue
-		}
-
-		cells := b.GetCells(clueMap[i])
-		clues = append(clues, &Clue{clueValue, cells, make([][]int, 0)})
-
-		//Apply the initial deductions to the board state
-		deduce(clueValue, cells, b)
-	}
-
-	sol := findSolutionStack(b, clues)
+	sol := solveNextClue(b, clues)
 	if sol == nil {
-		panic("unable to find solution")
+		panic(errorNoSolution)
 	}
 
-	return sol.Collapse()
+	return sol.Flatten()
 }
 
-func findSolutionStack(b *Board, clues []*Clue) *Board {
+func solveNextClue(b *Board, clues []*Clue) *Board {
 
-	visible, maxHeight := 0, 0
-	nextClue := clues[0]
+	visible, maxHeight, nextClue := 0, 0, clues[0]
 
-	//For each of the cells that are part of this clue
+	//Go through cell that is part of this clue
 	for _, c := range nextClue.cells {
+		numPossible, height := b.NumPossibles(c)
 
-		//Get the number of possible clues for this cell
-		numberPossible, height := b.NumPossibles(c)
-
-		//Is there more than one possibility?
-		if numberPossible > 1 {
-
-			//Iterate through each possibility, set that as the value
-			//and then recurse to resolve the remaining cells for this
-			//clue
-			for _, v := range b.Possibles(c) {
-
-				if v > maxHeight && visible+1 > nextClue.visible {
-					continue
+		//If the number of possible options is only 1,
+		if numPossible == 1 {
+			//Increase the number skyscrapers we can see from this
+			//clue if the height is greater than the current max height
+			if height > maxHeight {
+				visible++
+				maxHeight = height
+				//If we can see more skyscrapers than we should,
+				//just exit now - as it's not possible for this number
+				//to go down no matter what we do next
+				if visible > nextClue.visible {
+					break
 				}
+			}
+		} else {
 
-				//IDea: Store an index for each r/c that says if the
-				//specific number has been set in there already. Before
-				//doing the set,
+			//If there is more than 1 possible option for each cell, then
+			//iterate through each possibility, set that as the value for
+			//the cell and then recurse to resolve the remaining cells
+			for _, v := range b.Possibles(c) {
 
 				boardCopy := b.Copy()
 				err := boardCopy.Set(c, v)
@@ -315,36 +290,41 @@ func findSolutionStack(b *Board, clues []*Clue) *Board {
 					continue
 				}
 
-				solution := findSolutionStack(boardCopy, clues)
+				solution := solveNextClue(boardCopy, clues)
 				if solution != nil {
 					return solution
 				}
 			}
 
-			//We've filled in all possible values for this nextClue
+			//We've filled in all possible values for this clue
+			//but none of these resulted in a possible solution, so
+			//return nil.
 			return nil
 		}
 
-		if height > maxHeight {
-			visible++
-			maxHeight = height
-		}
-
 	}
 
-	if nextClue.visible == visible {
-		//this nextClue has been satisfied
-		if len(clues) == 1 {
-			//this was the last nextClue, this is our solution
-			return b
-		}
-		return findSolutionStack(b, clues[1:])
+	//We've checked all cells,  they all have only 1 possible
+	//value. Check that the visible skyscrapers match what we
+	//should have for this clue
+	if nextClue.visible != visible {
+		return nil
 	}
 
-	//The final solution for this clue does not match the value the clue
-	//expects, so return nil
-	return nil
+	//If there are more clues to resolved, recurse and move on to the
+	//next clue
+	if len(clues) > 1 {
+		return solveNextClue(b, clues[1:])
+	}
+
+	//This was the last clue, we have our solution
+	return b
 }
+
+var errUnsolvableCell = errors.New("cell has no remaining values")
+var errorNoSolution = errors.New("no solution")
+
+type Deducer func(clue *Clue, b *Board)
 
 type Cell struct {
 	Row int
@@ -371,6 +351,40 @@ func initCellPool(size int) {
 	}
 }
 
+type Clue struct {
+	visible int
+	cells   []*Cell
+}
+
+type Clues []*Clue
+
+func NewClues(values []int, clueMap []*CellRange, b *Board) Clues {
+	var clues Clues = make([]*Clue, 0)
+	for i, value := range values {
+		if value == 0 {
+			continue
+		}
+
+		clues = append(clues, &Clue{value, b.GetCells(clueMap[i])})
+	}
+
+	sort.Sort(clues)
+
+	return clues
+}
+
+func (c Clues) Len() int {
+	return len(c)
+}
+
+func (c Clues) Less(i, j int) bool {
+	return c[i].visible > c[j].visible
+
+}
+func (c Clues) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
 type Direction uint8
 
 const (
@@ -385,11 +399,36 @@ type CellRange struct {
 	Dir   Direction
 }
 
-var errUnsolvableCell = errors.New("cell has no remaining values")
-
 type Board struct {
 	bits []bool
 	size int
+}
+
+func NewBoard(size int) Board {
+	initCellPool(size)
+	b := Board{bits: make([]bool, size*size*size), size: size}
+	for i := range b.bits {
+		b.bits[i] = true
+	}
+
+	return b
+}
+
+func NewBoardFrom(size int, initial [][][]int) *Board {
+	b := NewBoard(size)
+	if initial == nil {
+		return &b
+	}
+
+	for r := 0; r < size; r++ {
+		for c := 0; c < size; c++ {
+			for _, s := range initial[r][c] {
+				b.Init(cell(r, c), s)
+			}
+		}
+	}
+
+	return &b
 }
 
 func (b Board) cellIndex(c *Cell) int {
@@ -414,19 +453,20 @@ func (b Board) Only(c *Cell) int {
 }
 
 func (b Board) NumPossibles(c *Cell) (int, int) {
-	n := 0
-	p := 0
+	num, nextPossible := 0, 0
 	cellIndex := b.cellIndex(c)
 	for idx, isSet := range b.bits[cellIndex : cellIndex+b.size] {
-		if isSet {
-			n++
-			if n == 1 {
-				p = idx + 1
-			}
+		if !isSet {
+			continue
+		}
+
+		num++
+		if num == 1 {
+			nextPossible = idx + 1
 		}
 	}
 
-	return n, p
+	return num, nextPossible
 }
 
 func (b Board) Possibles(c *Cell) []int {
@@ -438,22 +478,6 @@ func (b Board) Possibles(c *Cell) []int {
 	}
 
 	return p
-}
-
-func (b Board) PossiblesCb(c *Cell, cb func(v int)) {
-	for v := 1; v <= b.size; v++ {
-		if b.Includes(c, v) {
-			cb(v)
-		}
-	}
-}
-
-func (b Board) EachCell(cb func(c *Cell)) {
-	for r := 0; r < b.size; r++ {
-		for c := 0; c < b.size; c++ {
-			cb(cell(r, c))
-		}
-	}
 }
 
 func (b Board) GetCells(a *CellRange) []*Cell {
@@ -497,30 +521,27 @@ func (b Board) Init(c *Cell, v int) {
 }
 
 func (b Board) Set(c *Cell, v int) error {
-	//fmt.Printf("Setting %v to %d\n", c, v)
 	cellIndex := b.cellIndex(c)
 	for s := 0; s < b.size; s++ {
 		b.bits[cellIndex+s] = s == v-1
 	}
 
-	//Update every other Cell in this Row - cannot be v
 	for row := 0; row < b.size; row++ {
 		target := cell(row, c.Col)
 		if target != c && b.Includes(target, v) {
 			err := b.Remove(target, v)
 			if err != nil {
-				return errUnsolvableCell
+				return err
 			}
 		}
 	}
 
-	//Update every other Cell in this column - cannot be v
 	for col := 0; col < b.size; col++ {
 		target := cell(c.Row, col)
 		if target != c && b.Includes(target, v) {
 			err := b.Remove(target, v)
 			if err != nil {
-				return errUnsolvableCell
+				return err
 			}
 		}
 	}
@@ -534,7 +555,7 @@ func (b Board) Copy() *Board {
 	return &bCopy
 }
 
-func (b Board) Collapse() [][]int {
+func (b Board) Flatten() [][]int {
 	result := make([][]int, b.size)
 	for r := 0; r < b.size; r++ {
 		result[r] = make([]int, b.size)
@@ -545,33 +566,6 @@ func (b Board) Collapse() [][]int {
 	}
 
 	return result
-}
-
-func NewBoard(size int) Board {
-	initCellPool(size)
-	b := Board{bits: make([]bool, size*size*size), size: size}
-	for i := range b.bits {
-		b.bits[i] = true
-	}
-
-	return b
-}
-
-func NewBoardFrom(size int, initial [][][]int) *Board {
-	b := NewBoard(size)
-	if initial == nil {
-		return &b
-	}
-
-	for r := 0; r < size; r++ {
-		for c := 0; c < size; c++ {
-			for _, s := range initial[r][c] {
-				b.Init(cell(r, c), s)
-			}
-		}
-	}
-
-	return &b
 }
 
 func (b Board) String() string {
@@ -592,183 +586,4 @@ func (b Board) String() string {
 		out += "\n"
 	}
 	return out
-}
-
-type ClueSolution []map[int]bool
-
-func (cs ClueSolution) Copy() ClueSolution {
-	var c ClueSolution = make([]map[int]bool, len(cs))
-	for i, existing := range cs {
-		c[i] = make(map[int]bool)
-		for k, v := range existing {
-			c[i][k] = v
-		}
-	}
-
-	return c
-}
-
-func (cs ClueSolution) SetSolution(i int, v int) error {
-
-	cs[i] = map[int]bool{v: true}
-
-	//Update indexes ahead so they can't have this value
-	for j, possibles := range cs[i+1:] {
-		if possibles[v] {
-			delete(possibles, v)
-			if len(possibles) == 0 {
-				return fmt.Errorf("no possible soluitions left")
-			}
-
-			//Removing a value might mean this value *has* to be something
-			//if so - remove that option for future possibles
-			if len(possibles) == 1 {
-				e := cs.SetSolution(i+1+j, firstKey(possibles))
-				if e != nil {
-					return e
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
-func (cs ClueSolution) Flatten() ([]int, int) {
-	flattened := make([]int, len(cs))
-
-	set := make(map[int]bool)
-	visible := 0
-	maxHeight := 0
-	for i, s := range cs {
-		height := firstKey(s)
-		if _, ok := set[height]; ok {
-			panic("Already have")
-		}
-		set[height] = true
-		flattened[i] = height
-		if height > maxHeight {
-			visible++
-			maxHeight = height
-		}
-	}
-
-	return flattened, visible
-}
-
-type Clue struct {
-	visible   int
-	cells     []*Cell
-	solutions [][]int
-}
-
-func resolveClues(b *Board, clues []*Clue) {
-	//fmt.Printf("Resolving clues from %v:", b)
-	for _, clue := range clues {
-		var starting ClueSolution = make([]map[int]bool, 0)
-
-		for _, c := range clue.cells {
-			possibles := make(map[int]bool)
-			for _, p := range b.Possibles(c) {
-				possibles[p] = true
-			}
-
-			starting = append(starting, possibles)
-		}
-
-		resolveClue(clue, starting)
-		if len(clue.solutions) == 0 {
-			panic("No solutions found for clue")
-		}
-	}
-	//see clue solution from initial board state
-	//iterate through clue and fill in possibles
-}
-
-func firstKey(m map[int]bool) int {
-	for k := range m {
-		return k
-	}
-	panic("nothing in map")
-}
-
-func resolveClue(clue *Clue, solution ClueSolution) {
-
-	//TODO: Could also bail out early here - calculate total
-	//visible, if greater than clue then it can never go down
-	complete := true
-	for i, possibles := range solution {
-		if len(possibles) == 1 {
-			continue
-		}
-
-		complete = false
-		for v := range possibles {
-			solutionCopy := solution.Copy()
-			err := solutionCopy.SetSolution(i, v)
-			if err != nil {
-				continue
-			}
-
-			//TODO: Could pass in index to save some iteration
-			resolveClue(clue, solutionCopy)
-		}
-
-		break
-	}
-
-	if complete {
-		flattened, visible := solution.Flatten()
-		if visible == clue.visible {
-			clue.solutions = append(clue.solutions, flattened)
-		} else {
-			//fmt.Printf("Discarding solution %v for %v\n", solution, clue)
-		}
-	}
-}
-
-func (c *Clue) String() string {
-	s := ""
-	for _, cell := range c.cells {
-		s += fmt.Sprintf(" %v ", cell)
-	}
-
-	return fmt.Sprintf("%d visible in %s", c.visible, s)
-}
-
-func findSolutionClues(b *Board, clues []*Clue) *Board {
-
-	clue := clues[0]
-	for _, solution := range clue.solutions {
-		bCopy := b.Copy()
-
-		appliedClean := true
-		for cellIndex, value := range solution {
-			c := clue.cells[cellIndex]
-
-			if !bCopy.Includes(c, value) {
-				appliedClean = false
-				break
-			}
-
-			err := bCopy.Set(c, value)
-			if err != nil {
-				appliedClean = false
-				break
-			}
-		}
-
-		if appliedClean {
-			if len(clues) == 1 {
-				return bCopy
-			}
-
-			sol := findSolutionClues(bCopy, clues[1:])
-			if sol != nil {
-				return sol
-			}
-		}
-	}
-
-	return nil
 }
